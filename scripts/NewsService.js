@@ -1,4 +1,4 @@
-import LoadMoreBtn from "./components/LoadMoreBtn";
+// import LoadMoreBtn from "./components/LoadMoreBtn.js";
 
 const URL = "https://newsapi.org/v2/everything";
 const API_KAY = "188c32ad7c18475884f6664ec72f8060";
