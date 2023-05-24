@@ -1,14 +1,22 @@
-import API from "./api.js";
+// import API from "./api.js";
+
+import NewsService from "./NewsService.js";
+import LoadMoreBtn from "./components/LoadMoreBtn.js";
 
 // 1. отримати refs
 const refs = {
   form: document.getElementById("form"),
   newsWrapper: document.getElementById("newsWrapper"),
 };
-
+const newsService = new NewsService();
+const loadMoreBtn = new LoadMoreBtn({
+  selector: "#loadMore",
+  isHidden: true,
+});
 // 2. вішаємо слухач подій на самбіт на форму
 
 refs.form.addEventListener("submit", onSubmit);
+loadMoreBtn.button.addEventListener("click", fetchArticles);
 
 // 3.отримати запит з інпуту і передати його у вигляді квері параметру на сервер
 
@@ -22,22 +30,17 @@ function onSubmit(event) {
   //     4.1 якщо негативна відповідь - інформувати користувача
   // 5.отримаємо результат та  перебираємо масив новин та створюємо з нього розмітку (збираємо одну ствроку)
   if (value === "") alert("No value!");
-  else
-    API.getNews(value)
-      .then(({ articles }) => {
-        if (articles.length === 0) throw new Error("No data");
+  else {
+    newsService.searchQuery = value;
+    newsService.resetPage();
 
-        return articles.reduce(
-          (markup, article) => markup + createMakup(article),
-          ""
-        );
-      })
-      .then(updateNewsList)
-      //   .then(data => console.log(data))
-      .catch(onError)
+    loadMoreBtn.show();
+
+    clearNewsList();
+    getArticlesMarkup()
       // 7. очистити форму
       .finally(() => form.reset);
-  //   .catch((err) => onError(err));
+  }
 }
 
 function createMakup({ title, author, description, url, urlToImage }) {
@@ -57,10 +60,57 @@ function createMakup({ title, author, description, url, urlToImage }) {
 // 6. показуємо користувачу розмітку (innerHTML)
 
 function updateNewsList(markup) {
-  refs.newsWrapper.innerHTML = markup;
+  refs.newsWrapper.insertAdjacentHTML("beforeend", markup);
 }
 
 function onError(err) {
-  console.error(err);
-  updateNewsList("<p>Not Found!</p>");
+  console.log(err);
+  loadMoreBtn.hide();
+  refs.newsWrapper.innerHTML = "<p>Not Found!</p>";
+}
+
+// заняття 2
+
+function fetchArticles() {
+  loadMoreBtn.disable();
+  getArticlesMarkup().then(() => loadMoreBtn.enable());
+}
+function clearNewsList() {
+  refs.newsWrapper.innerHTML = "";
+}
+function getArticlesMarkup() {
+  return (
+    newsService
+      .getNews()
+      .then((articles) => {
+        console.log(articles, "articles");
+        if (!articles) {
+          loadMoreBtn.hide();
+          return "";
+        }
+        if (articles.length === 0) throw new Error("No data");
+
+        return articles.reduce(
+          (markup, article) => markup + createMakup(article),
+          ""
+        );
+      })
+      .then(updateNewsList)
+
+      //   .then(data => console.log(data))
+      .catch(onError)
+    //   .catch((err) => onError(err));
+  );
+
+
+  //! Infinite scroll
+  // function handleScroll() {
+  //   const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+
+  //   if (scrollTop + clientHeight >= scrollHeight - 5) {
+  //     fetchArticles();
+  //   }
+  // }
+
+  // window.addEventListener("scroll", handleScroll);
 }
