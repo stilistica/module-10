@@ -39,13 +39,12 @@ function onSubmit(event) {
     clearNewsList();
     getArticlesMarkup()
       // 7. очистити форму
-      .finally(() => form.reset);
+      .finally(() => form.reset());
   }
 }
 
 function createMakup({ title, author, description, url, urlToImage }) {
-  return;
-  `  <div class="article-card">
+  return `<div class="article-card">
     <h2 class="article-title">${title}</h2>
     <h3 class="article-author">${author || "Unknown"}</h3>
     <img src=${
